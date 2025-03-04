@@ -1,10 +1,14 @@
 import streamlit as st
-from groq import Groq
+import requests
 import os
 
 os.environ["GROQ_API_KEY"] = "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"
 
-client = Groq(api_key=os.environ["GROQ_API_KEY"])
+API_URL = "https://api.groq.com/openai/v1/chat/completions"
+HEADERS = {
+    "Authorization": f"Bearer {os.environ['GROQ_API_KEY']}",
+    "Content-Type": "application/json"
+}
 
 # Streamlit page config
 st.set_page_config(page_title="🏋️ AI Health Coach", page_icon="💬", layout="centered")
@@ -72,8 +76,7 @@ if "messages" not in st.session_state:
 if "chat_display" not in st.session_state:
     st.session_state.chat_display = []
 
-
-#  Input form
+# Input form
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Type your message here:", key="user_input")
     send = st.form_submit_button("Send 💬")
@@ -82,16 +85,20 @@ if send and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     st.session_state.chat_display.append(f'<div class="user-msg"><strong>You:</strong> {user_input}</div>')
 
-    response = client.chat.completions.create(
-        model="llama-3.2-1b-preview",
-        messages=st.session_state.messages,
-        temperature=0.7
-    )
+    payload = {
+        "model": "llama-3.2-1b-preview",
+        "messages": st.session_state.messages,
+        "temperature": 0.7
+    }
 
-    reply = response.choices[0].message.content
+    response = requests.post(API_URL, headers=HEADERS, json=payload)
+    if response.status_code == 200:
+        reply = response.json()["choices"][0]["message"]["content"]
+    else:
+        reply = "Sorry, there was an error. Please try again."
+
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.session_state.chat_display.append(f'<div class="coach-msg"><strong>Coach:</strong> {reply}</div>')
-
 
 # Display chat history
 st.write("---")
