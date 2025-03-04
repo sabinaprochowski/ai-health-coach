@@ -93,7 +93,7 @@ if send and user_input:
     st.session_state.chat_display.append(f'<div class="coach-msg"><strong>Coach:</strong> {reply}</div>')
 
 
-# ✅ Display chat history
+# Display chat history
 st.write("---")
 for message in reversed(st.session_state.chat_display):
     st.markdown(message, unsafe_allow_html=True)
